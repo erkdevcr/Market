@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SuperPrecio CR</title>
+<link rel="manifest" href="#" id="manifest-link">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1628;
+    --surface: #111e35;
+    --surface2: #162440;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8eef8;
+    --muted: #6b7fa3;
+    --accent: #3b82f6;
+    --accent2: #22d3ee;
+    --green: #10b981;
+    --red: #f43f5e;
+    --yellow: #fbbf24;
+    --maxi: #e85d04;
+    --mas: #7c3aed;
+    --walmart: #0071dc;
+    --radius: 16px;
+    --nav-h: 64px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    padding-bottom: var(--nav-h);
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,22,40,0.92);
+    backdrop-filter: blur(20px);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar-title {
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    flex: 1;
+  }
+  .topbar-sync {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: .2s;
+    font-size: 14px;
+  }
+  .topbar-sync:active { transform: scale(0.9); }
+  .topbar-sync.spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SEARCH ── */
+  .search-wrap {
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .search-inner {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    transition: border-color .2s;
+  }
+  .search-inner:focus-within { border-color: var(--accent); }
+  .search-inner svg { flex-shrink: 0; color: var(--muted); }
+  .search-inner input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-family: 'Sora', sans-serif;
+    font-size: 15px;
+  }
+  .search-inner input::placeholder { color: var(--muted); }
+  #search-clear {
+    display: none; background: none; border: none;
+    color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1;
+  }
+
+  /* ── TIENDA FILTERS ── */
+  .store-filters {
+    display: flex; gap: 8px;
+    padding: 10px 16px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .store-filters::-webkit-scrollbar { display: none; }
+  .store-chip {
+    flex-shrink: 0;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1.5px solid transparent;
+    cursor: pointer; transition: .2s;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: .3px;
+  }
+  .store-chip[data-store="maxi"] { color: var(--maxi); border-color: var(--maxi); }
+  .store-chip[data-store="mas"] { color: var(--mas); border-color: var(--mas); }
+  .store-chip[data-store="walmart"] { color: var(--walmart); border-color: var(--walmart); }
+  .store-chip.active[data-store="maxi"] { background: var(--maxi); color: #fff; }
+  .store-chip.active[data-store="mas"] { background: var(--mas); color: #fff; }
+  .store-chip.active[data-store="walmart"] { background: var(--walmart); color: #fff; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── SEARCH RESULTS ── */
+  .results-header {
+    padding: 10px 16px 4px;
+    font-size: 11px; font-weight: 600;
+    color: var(--muted); letter-spacing: 1px;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+  }
+  .product-card {
+    margin: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color .2s, transform .15s;
+    cursor: pointer;
+  }
+  .product-card:active { transform: scale(0.98); }
+  .product-card-inner {
+    display: flex; gap: 12px; padding: 12px;
+    align-items: flex-start;
+  }
+  .product-img {
+    width: 64px; height: 64px; flex-shrink: 0;
+    border-radius: 10px; background: #fff;
+    object-fit: contain; padding: 4px;
+  }
+  .product-img-placeholder {
+    width: 64px; height: 64px; flex-shrink: 0;
+    border-radius: 10px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .product-info { flex: 1; min-width: 0; }
+  .product-name {
+    font-size: 13px; font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .product-brand {
+    font-size: 11px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-top: 2px; text-transform: uppercase;
+  }
+  .product-prices {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .price-badge {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+    font-family: 'DM Mono', monospace;
+  }
+  .price-badge.maxi { background: rgba(232,93,4,0.15); color: var(--maxi); }
+  .price-badge.mas { background: rgba(124,58,237,0.15); color: var(--mas); }
+  .price-badge.walmart { background: rgba(0,113,220,0.15); color: var(--walmart); }
+  .price-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .price-badge.maxi .dot { background: var(--maxi); }
+  .price-badge.mas .dot { background: var(--mas); }
+  .price-badge.walmart .dot { background: var(--walmart); }
+  .price-badge.loading { background: var(--surface2); color: var(--muted); }
+  .price-badge.unavailable { background: var(--surface2); color: var(--muted); opacity: 0.5; }
+
+  .add-btn {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    border: none; color: #fff;
+    font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: .15s; align-self: center;
+  }
+  .add-btn:active { transform: scale(0.9); background: var(--accent2); }
+  .add-btn.added { background: var(--green); }
+
+  /* saving badge */
+  .saving-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 5px;
+    font-size: 10px; font-weight: 700;
+    background: rgba(16,185,129,0.15); color: var(--green);
+    font-family: 'DM Mono', monospace;
+    margin-top: 4px;
+  }
+
+  /* empty / loading states */
+  .state-msg {
+    text-align: center; padding: 60px 24px;
+    color: var(--muted);
+  }
+  .state-msg .icon { font-size: 48px; margin-bottom: 12px; }
+  .state-msg p { font-size: 14px; line-height: 1.6; }
+
+  /* ── LISTA ── */
+  .list-header {
+    padding: 16px; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .list-title { font-size: 18px; font-weight: 700; }
+  .list-week {
+    font-size: 11px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .list-empty {
+    text-align: center; padding: 60px 24px;
+    color: var(--muted);
+  }
+  .list-item {
+    margin: 6px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex; gap: 10px; align-items: center;
+    transition: .2s;
+  }
+  .list-item.checked { opacity: 0.5; }
+  .list-item-img {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: 8px; background: #fff;
+    object-fit: contain; padding: 3px;
+  }
+  .list-item-img-ph {
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: 8px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .list-item-info { flex: 1; min-width: 0; }
+  .list-item-name {
+    font-size: 13px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .list-item-store {
+    font-size: 11px; color: var(--muted);
+    font-family: 'DM Mono', monospace; margin-top: 2px;
+  }
+  .list-item-price {
+    font-size: 14px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent2); flex-shrink: 0;
+  }
+  .list-item-actions {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .qty-btn {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: .15s;
+  }
+  .qty-btn:active { transform: scale(0.9); }
+  .qty-val {
+    font-size: 13px; font-weight: 700; min-width: 20px;
+    text-align: center; font-family: 'DM Mono', monospace;
+  }
+  .del-btn {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(244,63,94,0.1); border: none;
+    color: var(--red); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: .15s; margin-left: 4px;
+  }
+  .del-btn:active { transform: scale(0.9); }
+  .check-btn {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--border); background: none;
+    cursor: pointer; flex-shrink: 0; transition: .2s;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent; font-size: 12px;
+  }
+  .check-btn.checked {
+    background: var(--green); border-color: var(--green); color: #fff;
+  }
+
+  /* ── PRESUPUESTO ── */
+  .budget-section {
+    padding: 16px;
+  }
+  .budget-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .budget-card-title {
+    font-size: 11px; font-weight: 700;
+    color: var(--muted); letter-spacing: 1px;
+    text-transform: uppercase; font-family: 'DM Mono', monospace;
+    margin-bottom: 16px;
+  }
+  .budget-total {
+    font-size: 36px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .budget-sub {
+    font-size: 12px; color: var(--muted); margin-top: 4px;
+  }
+  .store-breakdown {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .store-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .store-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .store-row-name {
+    font-size: 13px; font-weight: 600; flex: 1;
+  }
+  .store-row-amount {
+    font-size: 14px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+  .store-row-bar-wrap {
+    height: 4px; background: var(--surface2);
+    border-radius: 2px; margin-top: 4px; overflow: hidden;
+  }
+  .store-row-bar { height: 100%; border-radius: 2px; transition: width .5s ease; }
+
+  .history-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-week {
+    font-size: 11px; font-family: 'DM Mono', monospace;
+    color: var(--muted); width: 70px; flex-shrink: 0;
+  }
+  .history-amount {
+    font-size: 14px; font-weight: 700;
+    font-family: 'DM Mono', monospace; flex: 1;
+  }
+  .history-delta {
+    font-size: 11px; font-weight: 700;
+    font-family: 'DM Mono', monospace; padding: 2px 6px;
+    border-radius: 5px;
+  }
+  .history-delta.up { background: rgba(244,63,94,0.15); color: var(--red); }
+  .history-delta.down { background: rgba(16,185,129,0.15); color: var(--green); }
+  .history-delta.same { background: var(--surface2); color: var(--muted); }
+
+  /* ── NAV ── */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: rgba(10,22,40,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 8px;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    padding: 8px; border-radius: 12px;
+    border: none; background: none;
+    color: var(--muted); cursor: pointer;
+    transition: .2s; font-family: 'Sora', sans-serif;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; }
+  .nav-btn span { font-size: 10px; font-weight: 600; }
+  .nav-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--red); color: #fff;
+    font-size: 9px; font-weight: 700;
+    border-radius: 10px; padding: 1px 5px;
+    font-family: 'DM Mono', monospace;
+  }
+  .nav-icon-wrap { position: relative; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: calc(var(--nav-h) + 12px);
+    left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 16px;
+    font-size: 13px; font-weight: 600;
+    white-space: nowrap; z-index: 200;
+    opacity: 0; transition: all .3s;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── STORE SELECTOR MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 300;
+    backdrop-filter: blur(4px);
+    align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    width: 100%; padding: 20px;
+    border-top: 1px solid var(--border);
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } }
+  .modal-title {
+    font-size: 16px; font-weight: 700;
+    margin-bottom: 16px; text-align: center;
+  }
+  .modal-product-name {
+    font-size: 13px; color: var(--muted);
+    text-align: center; margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  .store-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px; border-radius: 12px;
+    background: var(--surface2); margin-bottom: 8px;
+    cursor: pointer; border: 2px solid transparent;
+    transition: .2s;
+  }
+  .store-option:active { transform: scale(0.98); }
+  .store-option.selected { border-color: var(--accent); }
+  .store-option-dot {
+    width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  }
+  .store-option-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .store-option-price {
+    font-size: 15px; font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+  .store-option-saving {
+    font-size: 10px; color: var(--green);
+    font-family: 'DM Mono', monospace;
+  }
+  .modal-add-btn {
+    width: 100%; padding: 16px;
+    background: var(--accent); border: none; border-radius: 14px;
+    color: #fff; font-size: 16px; font-weight: 700;
+    cursor: pointer; margin-top: 12px;
+    font-family: 'Sora', sans-serif; transition: .2s;
+  }
+  .modal-add-btn:active { transform: scale(0.98); }
+  .modal-close {
+    width: 100%; padding: 12px;
+    background: none; border: none; border-radius: 14px;
+    color: var(--muted); font-size: 14px;
+    cursor: pointer; font-family: 'Sora', sans-serif;
+    margin-top: 4px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-title">SuperPrecio CR</div>
+  <div class="topbar-sync" id="sync-btn" title="Actualizar precios">⟳</div>
+</div>
+
+<!-- PAGE: BUSCAR -->
+<div class="page active" id="page-buscar">
+  <div class="search-wrap">
+    <div class="search-inner">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Buscar producto..." autocomplete="off" autocorrect="off">
+      <button id="search-clear">✕</button>
+    </div>
+  </div>
+  <div class="store-filters">
+    <div class="store-chip active" data-store="maxi">Maxi Palí</div>
+    <div class="store-chip active" data-store="mas">Más x Menos</div>
+    <div class="store-chip active" data-store="walmart">Walmart</div>
+  </div>
+  <div id="search-results">
+    <div class="state-msg">
+      <div class="icon">🛒</div>
+      <p>Buscá un producto para ver<br>precios en las 3 tiendas</p>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: LISTA -->
+<div class="page" id="page-lista">
+  <div class="list-header">
+    <div>
+      <div class="list-title">Mi lista</div>
+      <div class="list-week" id="week-label"></div>
+    </div>
+    <button onclick="clearChecked()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Sora',sans-serif;">Limpiar marcados</button>
+  </div>
+  <div id="list-container"></div>
+</div>
+
+<!-- PAGE: PRESUPUESTO -->
+<div class="page" id="page-presupuesto">
+  <div class="budget-section">
+    <div class="budget-card">
+      <div class="budget-card-title">Total esta semana</div>
+      <div class="budget-total" id="budget-total">₡0</div>
+      <div class="budget-sub" id="budget-items-count">0 productos en la lista</div>
+    </div>
+    <div class="budget-card">
+      <div class="budget-card-title">Por tienda</div>
+      <div class="store-breakdown" id="store-breakdown"></div>
+    </div>
+    <div class="budget-card">
+      <div class="budget-card-title">Historial semanal</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+  <button class="nav-btn active" data-page="buscar">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <span>Buscar</span>
+  </button>
+  <button class="nav-btn" data-page="lista">
+    <div class="nav-icon-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
+      <span class="nav-badge" id="list-badge" style="display:none"></span>
+    </div>
+    <span>Mi lista</span>
+  </button>
+  <button class="nav-btn" data-page="presupuesto">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span>Presupuesto</span>
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- STORE SELECTOR MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">¿En qué tienda lo comprás?</div>
+    <div class="modal-product-name" id="modal-product-name"></div>
+    <div id="modal-store-options"></div>
+    <button class="modal-add-btn" id="modal-confirm">Agregar a la lista</button>
+    <button class="modal-close" onclick="closeModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ── PROXY CORS ──
+// Usa la función serverless de Netlify en /api
+async function proxyFetch(store, queryString) {
+  const url = `/api?store=${store}&query=${encodeURIComponent(queryString)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Proxy error ' + res.status);
+  return await res.json();
+}
+
+// ── STORES CONFIG ──
+const STORES = {
+  maxi:    { name: 'Maxi Palí',   domain: 'www.maxipali.co.cr',   color: '#e85d04' },
+  mas:     { name: 'Más x Menos', domain: 'www.masxmenos.cr',      color: '#7c3aed' },
+  walmart: { name: 'Walmart',     domain: 'www.walmart.co.cr',     color: '#0071dc' },
+};
+
+// ── STATE ──
+let lista = JSON.parse(localStorage.getItem('sp_lista') || '[]');
+let history = JSON.parse(localStorage.getItem('sp_history') || '[]');
+let activeStores = new Set(['maxi','mas','walmart']);
+let searchTimeout = null;
+let currentProduct = null;
+let selectedStore = null;
+let searchCache = {};
+
+// ── INIT ──
+updateWeekLabel();
+renderList();
+renderBudget();
+updateBadge();
+
+// Check if new week → save history
+checkWeeklyReset();
+
+// ── NAVIGATION ──
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.dataset.page;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-' + page).classList.add('active');
+    if (page === 'presupuesto') renderBudget();
+    if (page === 'lista') renderList();
+  });
+});
+
+// ── STORE FILTERS ──
+document.querySelectorAll('.store-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const store = chip.dataset.store;
+    if (activeStores.has(store)) {
+      if (activeStores.size === 1) return; // al menos una activa
+      activeStores.delete(store);
+      chip.classList.remove('active');
+    } else {
+      activeStores.add(store);
+      chip.classList.add('active');
+    }
+    const q = document.getElementById('search-input').value.trim();
+    if (q.length >= 2) doSearch(q);
+  });
+});
+
+// ── SEARCH ──
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  searchClear.style.display = q ? 'block' : 'none';
+  clearTimeout(searchTimeout);
+  if (q.length < 2) {
+    showSearchIdle();
+    return;
+  }
+  searchTimeout = setTimeout(() => doSearch(q), 500);
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.style.display = 'none';
+  showSearchIdle();
+});
+
+function showSearchIdle() {
+  document.getElementById('search-results').innerHTML = `
+    <div class="state-msg">
+      <div class="icon">🛒</div>
+      <p>Buscá un producto para ver<br>precios en las 3 tiendas</p>
+    </div>`;
+}
+
+async function doSearch(q) {
+  const results = document.getElementById('search-results');
+  results.innerHTML = `<div class="state-msg"><p>Buscando...</p></div>`;
+
+  const cacheKey = q.toLowerCase();
+  let products;
+
+  if (searchCache[cacheKey]) {
+    products = searchCache[cacheKey];
+  } else {
+    // Fetch from Maxi Palí (same catalog for all Walmart CR stores)
+    try {
+      const queryString = `ft=${encodeURIComponent(q)}&_from=0&_to=19`;
+      products = await proxyFetch('maxi', queryString);
+      searchCache[cacheKey] = products;
+    } catch(e) {
+      results.innerHTML = `<div class="state-msg"><div class="icon">⚠️</div><p>No se pudo conectar.<br>Verificá tu conexión a internet.</p></div>`;
+      return;
+    }
+  }
+
+  if (!products.length) {
+    results.innerHTML = `<div class="state-msg"><div class="icon">🔍</div><p>No se encontraron productos<br>para "<strong>${q}</strong>"</p></div>`;
+    return;
+  }
+
+  // Parse products
+  const parsed = products.map(parseProduct).filter(Boolean);
+  renderResults(parsed);
+
+  // Fetch prices from other stores in background
+  parsed.forEach(p => fetchOtherStorePrices(p));
+}
+
+function parseProduct(raw) {
+  try {
+    const item = raw.items[0];
+    const offer = item.sellers[0].commertialOffer;
+    const price = offer.Price;
+    const listPrice = offer.ListPrice;
+    const img = item.images?.[0]?.imageUrl || null;
+    return {
+      id: raw.productId,
+      itemId: item.itemId,
+      name: raw.productName,
+      brand: raw.brand,
+      img,
+      link: raw.link,
+      prices: {
+        maxi: price,
+        mas: null,   // se carga después
+        walmart: null,
+      },
+      listPrices: {
+        maxi: listPrice,
+      },
+      available: { maxi: offer.IsAvailable, mas: null, walmart: null },
+    };
+  } catch(e) { return null; }
+}
+
+async function fetchOtherStorePrices(product) {
+  const stores = ['mas', 'walmart'];
+  for (const store of stores) {
+    if (!activeStores.has(store)) continue;
+    try {
+      const queryString = `fq=productId:${product.id}&_from=0&_to=1`;
+      const data = await proxyFetch(store, queryString);
+      if (data.length) {
+        const offer = data[0].items[0].sellers[0].commertialOffer;
+        product.prices[store] = offer.Price;
+        product.available[store] = offer.IsAvailable;
+      } else {
+        product.available[store] = false;
+      }
+    } catch(e) {
+      product.available[store] = false;
+    }
+    // Update UI
+    updateProductCard(product);
+  }
+}
+
+function updateProductCard(product) {
+  const card = document.querySelector(`[data-product-id="${product.id}"]`);
+  if (!card) return;
+  const pricesEl = card.querySelector('.product-prices');
+  pricesEl.innerHTML = renderPriceBadges(product);
+  const saving = card.querySelector('.saving-badge');
+  const savingHtml = getSavingBadge(product);
+  if (saving) saving.outerHTML = savingHtml;
+  else {
+    const info = card.querySelector('.product-info');
+    info.insertAdjacentHTML('beforeend', savingHtml);
+  }
+}
+
+function renderPriceBadges(product) {
+  return Object.entries(STORES).map(([key, store]) => {
+    if (!activeStores.has(key)) return '';
+    const price = product.prices[key];
+    const avail = product.available[key];
+    if (avail === null) return `<span class="price-badge loading">⋯ ${store.name}</span>`;
+    if (!avail || price === null) return `<span class="price-badge unavailable">${store.name} N/D</span>`;
+    return `<span class="price-badge ${key}"><span class="dot"></span>${formatPrice(price)}</span>`;
+  }).join('');
+}
+
+function getSavingBadge(product) {
+  const prices = Object.entries(product.prices)
+    .filter(([k,v]) => v !== null && product.available[k])
+    .map(([,v]) => v);
+  if (prices.length < 2) return '';
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const diff = max - min;
+  if (diff < 50) return '';
+  return `<div class="saving-badge">↓ Ahorrás ${formatPrice(diff)} vs más caro</div>`;
+}
+
+function renderResults(products) {
+  const inList = new Set(lista.map(i => i.productId));
+  const html = products.map(p => {
+    const added = inList.has(p.id);
+    const imgEl = p.img
+      ? `<img class="product-img" src="${p.img}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\'product-img-placeholder\'>🛍️</div>'">`
+      : `<div class="product-img-placeholder">🛍️</div>`;
+    return `
+    <div class="product-card" data-product-id="${p.id}">
+      <div class="product-card-inner">
+        ${imgEl}
+        <div class="product-info">
+          <div class="product-name">${p.name}</div>
+          <div class="product-brand">${p.brand}</div>
+          <div class="product-prices">${renderPriceBadges(p)}</div>
+          ${getSavingBadge(p)}
+        </div>
+        <button class="add-btn ${added ? 'added' : ''}" data-id="${p.id}" onclick="handleAdd(event, ${JSON.stringify(p).replace(/"/g, '&quot;')})">${added ? '✓' : '+'}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const count = products.length;
+  document.getElementById('search-results').innerHTML =
+    `<div class="results-header">${count} resultado${count !== 1 ? 's' : ''}</div>` + html;
+}
+
+// ── ADD TO LIST (store selector) ──
+function handleAdd(e, product) {
+  e.stopPropagation();
+  if (lista.find(i => i.productId === product.id)) {
+    // Remove it
+    lista = lista.filter(i => i.productId !== product.id);
+    saveLista();
+    updateBadge();
+    const btn = e.currentTarget;
+    btn.classList.remove('added');
+    btn.textContent = '+';
+    showToast('Producto eliminado de la lista');
+    return;
+  }
+  currentProduct = product;
+  openModal(product);
+}
+
+function openModal(product) {
+  document.getElementById('modal-product-name').textContent = product.name;
+  selectedStore = null;
+
+  const availableStores = Object.entries(STORES).filter(([key]) => {
+    const price = product.prices[key];
+    return price !== null && product.available[key] !== false;
+  });
+
+  // Auto-select cheapest
+  let cheapestKey = null, cheapestPrice = Infinity;
+  availableStores.forEach(([key]) => {
+    if (product.prices[key] < cheapestPrice) {
+      cheapestPrice = product.prices[key];
+      cheapestKey = key;
+    }
+  });
+  selectedStore = cheapestKey;
+
+  const html = availableStores.map(([key, store]) => {
+    const price = product.prices[key];
+    const isCheap = key === cheapestKey;
+    return `
+    <div class="store-option ${isCheap ? 'selected' : ''}" data-store="${key}" onclick="selectStore('${key}')">
+      <span class="store-option-dot" style="background:${store.color}"></span>
+      <span class="store-option-name">${store.name}</span>
+      <div>
+        <div class="store-option-price">${formatPrice(price)}</div>
+        ${isCheap ? '<div class="store-option-saving">✓ Más barato</div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modal-store-options').innerHTML = html || '<p style="color:var(--muted);text-align:center;padding:20px;">Precios cargando...</p>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function selectStore(key) {
+  selectedStore = key;
+  document.querySelectorAll('.store-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.store === key);
+  });
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentProduct = null;
+  selectedStore = null;
+}
+
+document.getElementById('modal-confirm').addEventListener('click', () => {
+  if (!currentProduct || !selectedStore) return;
+  const price = currentProduct.prices[selectedStore];
+  const item = {
+    productId: currentProduct.id,
+    name: currentProduct.name,
+    brand: currentProduct.brand,
+    img: currentProduct.img,
+    store: selectedStore,
+    price: price,
+    qty: 1,
+    checked: false,
+    addedAt: Date.now(),
+  };
+  lista.push(item);
+  saveLista();
+  updateBadge();
+  closeModal();
+  showToast(`✓ Agregado — ${STORES[selectedStore].name}`);
+
+  // Update button
+  const btn = document.querySelector(`[data-id="${currentProduct.id}"]`);
+  if (btn) { btn.classList.add('added'); btn.textContent = '✓'; }
+});
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── LISTA ──
+function renderList() {
+  const container = document.getElementById('list-container');
+  if (!lista.length) {
+    container.innerHTML = `<div class="list-empty"><div style="font-size:48px;margin-bottom:12px">📋</div><p style="color:var(--muted);font-size:14px">Tu lista está vacía.<br>Buscá productos para agregar.</p></div>`;
+    return;
+  }
+
+  // Sort: unchecked first
+  const sorted = [...lista].sort((a,b) => (a.checked ? 1 : 0) - (b.checked ? 1 : 0));
+  container.innerHTML = sorted.map(item => {
+    const store = STORES[item.store];
+    const imgEl = item.img
+      ? `<img class="list-item-img" src="${item.img}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\'list-item-img-ph\'>🛍️</div>'">`
+      : `<div class="list-item-img-ph">🛍️</div>`;
+    return `
+    <div class="list-item ${item.checked ? 'checked' : ''}" data-pid="${item.productId}">
+      <button class="check-btn ${item.checked ? 'checked' : ''}" onclick="toggleCheck('${item.productId}')">✓</button>
+      ${imgEl}
+      <div class="list-item-info">
+        <div class="list-item-name">${item.name}</div>
+        <div class="list-item-store" style="color:${store.color}">${store.name}</div>
+      </div>
+      <div class="list-item-price">${formatPrice(item.price * item.qty)}</div>
+      <div class="list-item-actions">
+        <button class="qty-btn" onclick="changeQty('${item.productId}', -1)">−</button>
+        <span class="qty-val">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.productId}', 1)">+</button>
+        <button class="del-btn" onclick="removeItem('${item.productId}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCheck(pid) {
+  const item = lista.find(i => i.productId === pid);
+  if (item) { item.checked = !item.checked; saveLista(); renderList(); }
+}
+
+function changeQty(pid, delta) {
+  const item = lista.find(i => i.productId === pid);
+  if (item) {
+    item.qty = Math.max(1, item.qty + delta);
+    saveLista();
+    renderList();
+  }
+}
+
+function removeItem(pid) {
+  lista = lista.filter(i => i.productId !== pid);
+  saveLista();
+  updateBadge();
+  renderList();
+  showToast('Producto eliminado');
+}
+
+function clearChecked() {
+  lista = lista.filter(i => !i.checked);
+  saveLista();
+  updateBadge();
+  renderList();
+  showToast('Marcados eliminados');
+}
+
+// ── PRESUPUESTO ──
+function renderBudget() {
+  const total = lista.reduce((s, i) => s + i.price * i.qty, 0);
+  document.getElementById('budget-total').textContent = formatPrice(total);
+  document.getElementById('budget-items-count').textContent =
+    `${lista.length} producto${lista.length !== 1 ? 's' : ''} — ${lista.reduce((s,i)=>s+i.qty,0)} unidades`;
+
+  // Por tienda
+  const byStore = {};
+  lista.forEach(item => {
+    if (!byStore[item.store]) byStore[item.store] = 0;
+    byStore[item.store] += item.price * item.qty;
+  });
+  const maxVal = Math.max(...Object.values(byStore), 1);
+
+  document.getElementById('store-breakdown').innerHTML =
+    Object.entries(STORES).map(([key, store]) => {
+      const val = byStore[key] || 0;
+      if (!val) return '';
+      const pct = Math.round(val / total * 100);
+      return `
+      <div>
+        <div class="store-row">
+          <span class="store-dot" style="background:${store.color}"></span>
+          <span class="store-row-name">${store.name}</span>
+          <span class="store-row-amount">${formatPrice(val)}</span>
+          <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">${pct}%</span>
+        </div>
+        <div class="store-row-bar-wrap">
+          <div class="store-row-bar" style="width:${Math.round(val/maxVal*100)}%;background:${store.color}"></div>
+        </div>
+      </div>`;
+    }).join('') || '<p style="color:var(--muted);font-size:13px">Agregá productos a la lista</p>';
+
+  // Historial
+  const allHistory = [...history, { week: getCurrentWeekLabel(), total, items: lista.length }];
+  const last5 = allHistory.slice(-5).reverse();
+  document.getElementById('history-list').innerHTML = last5.map((h, i) => {
+    const prev = last5[i + 1];
+    let deltaEl = '';
+    if (prev && prev.total > 0) {
+      const diff = h.total - prev.total;
+      const pct = Math.round(Math.abs(diff) / prev.total * 100);
+      if (diff > 0) deltaEl = `<span class="history-delta up">+${pct}%</span>`;
+      else if (diff < 0) deltaEl = `<span class="history-delta down">−${pct}%</span>`;
+      else deltaEl = `<span class="history-delta same">sin cambio</span>`;
+    }
+    return `
+    <div class="history-row">
+      <span class="history-week">${h.week}</span>
+      <span class="history-amount">${formatPrice(h.total)}</span>
+      ${deltaEl}
+    </div>`;
+  }).join('') || '<p style="color:var(--muted);font-size:13px">El historial aparecerá aquí semana a semana</p>';
+}
+
+// ── SYNC PRICES ──
+document.getElementById('sync-btn').addEventListener('click', async () => {
+  if (!lista.length) { showToast('La lista está vacía'); return; }
+  const btn = document.getElementById('sync-btn');
+  btn.classList.add('spinning');
+  showToast('Actualizando precios...');
+
+  let updated = 0;
+  for (const item of lista) {
+    try {
+      const queryString = `fq=productId:${item.productId}&_from=0&_to=1`;
+      const data = await proxyFetch(item.store, queryString);
+      if (data.length) {
+        const newPrice = data[0].items[0].sellers[0].commertialOffer.Price;
+        if (newPrice !== item.price) {
+          item.price = newPrice;
+          updated++;
+        }
+      }
+    } catch(e) {}
+  }
+
+  saveLista();
+  renderList();
+  renderBudget();
+  btn.classList.remove('spinning');
+  showToast(updated ? `✓ ${updated} precio${updated !== 1 ? 's' : ''} actualizado${updated !== 1 ? 's' : ''}` : '✓ Precios al día');
+});
+
+// ── WEEKLY RESET ──
+function getCurrentWeekLabel() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now.setDate(diff));
+  return `${monday.getDate()}/${monday.getMonth()+1}`;
+}
+
+function updateWeekLabel() {
+  document.getElementById('week-label').textContent = `Semana del ${getCurrentWeekLabel()}`;
+}
+
+function checkWeeklyReset() {
+  const savedWeek = localStorage.getItem('sp_week');
+  const currentWeek = getCurrentWeekLabel();
+  if (savedWeek && savedWeek !== currentWeek) {
+    // Save history
+    const total = lista.reduce((s,i) => s + i.price * i.qty, 0);
+    history.push({ week: savedWeek, total, items: lista.length });
+    if (history.length > 10) history.shift();
+    localStorage.setItem('sp_history', JSON.stringify(history));
+    // Reset checks
+    lista.forEach(i => i.checked = false);
+    saveLista();
+  }
+  localStorage.setItem('sp_week', currentWeek);
+}
+
+// ── HELPERS ──
+function formatPrice(colones) {
+  return '₡' + Math.round(colones).toLocaleString('es-CR');
+}
+
+function saveLista() {
+  localStorage.setItem('sp_lista', JSON.stringify(lista));
+}
+
+function updateBadge() {
+  const badge = document.getElementById('list-badge');
+  if (lista.length) {
+    badge.style.display = 'block';
+    badge.textContent = lista.length;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
